@@ -5,18 +5,24 @@ import io from 'socket.io-client';
 
 export default function Chat() {
   const socketRef = useRef();
+  const messageBody = useRef();
   const [message, setMessage] = useState('');
-  const [messageHistory, setMessageHistory] = useState('');
+  const [messageHistory, setMessageHistory] = useState([]);
 
   const sendMessage = () => {
     socketRef.current.emit('message', message);
+    setMessageHistory([ ...messageHistory, message ]);
+    printMessage(message);
+    setMessage('');
   };
 
   useEffect(() => {
-    socketRef.current = io('//localhost:3000');
+    socketRef.current = io('http://localhost:3000');
     socketRef.current.on('teste', (data) => console.log(data));
-    socketRef.current.on('messages', (messages) => setMessageHistory(messages));
+    // socketRef.current.on('messages', (messages) => setMessageHistory([...messageHistory, messages ]));
   });
+
+  const printMessage = (message) => messageBody.current.innerHTML += `<div>${message}</div>`;
 
   return (
     <View style={styles.container}>
@@ -24,17 +30,13 @@ export default function Chat() {
         <Text style={styles.title}>Chat IO!</Text>
       </Animatable.View>
 
-      <TextInput
-        multiline={true}
-        numberOfLines={4}
-        onChangeText={(text) => setMessageHistory(text)}
-        value={messageHistory}
-      />
+      <div ref={messageBody} />
 
       <TextInput
         placeholder='Digite aqui ...'
         style={styles.input}
-        onBlur={(data) => setMessage(data.target.value)}
+        value={message}
+        onChange={(event) => setMessage(event.target.value)}
       />
 
       <TouchableOpacity
